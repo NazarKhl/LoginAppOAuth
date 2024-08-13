@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35122.118
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoginAppOAuth.Server", "LoginAppOAuth.Server\LoginAppOAuth.Server.csproj", "{00CF0AA7-6F34-4B47-920C-397D3B9501CA}"
+EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "loginappoauth.client", "loginappoauth.client\loginappoauth.client.esproj", "{855F4E7E-F77A-4B21-A0F0-7A8A567F903B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{00CF0AA7-6F34-4B47-920C-397D3B9501CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00CF0AA7-6F34-4B47-920C-397D3B9501CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00CF0AA7-6F34-4B47-920C-397D3B9501CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00CF0AA7-6F34-4B47-920C-397D3B9501CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{855F4E7E-F77A-4B21-A0F0-7A8A567F903B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{855F4E7E-F77A-4B21-A0F0-7A8A567F903B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{855F4E7E-F77A-4B21-A0F0-7A8A567F903B}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{855F4E7E-F77A-4B21-A0F0-7A8A567F903B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{855F4E7E-F77A-4B21-A0F0-7A8A567F903B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{855F4E7E-F77A-4B21-A0F0-7A8A567F903B}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F733BDFE-2AEE-4046-95F9-8765056B5D68}
+	EndGlobalSection
+EndGlobal
