@@ -1,6 +1,4 @@
-@LoginAppOAuth.Server_HostAddress = http://localhost:5260
+@LoginAppOAuth_Server_HostAddress = http://localhost:5260
 
-GET {{LoginAppOAuth.Server_HostAddress}}/weatherforecast/
+GET {{LoginAppOAuth_Server_HostAddress}}/auth/
 Accept: application/json
-
-###

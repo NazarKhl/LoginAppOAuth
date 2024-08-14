@@ -11,6 +11,19 @@ namespace LoginAppOAuth.Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowLocalhost5173",
+                    builder =>
+                    {
+                        builder.WithOrigins("https://localhost:5173")
+                               .AllowAnyHeader()
+                               .AllowAnyMethod()
+                               .AllowCredentials(); 
+                    });
+            });
+
+
             // Add services to the container.
 
             builder.Services.AddDbContext<UserDbContext>(options =>
@@ -28,11 +41,12 @@ namespace LoginAppOAuth.Server
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
+            app.UseCors("AllowLocalhost5173");
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.MapIdentityApi<IdentityUser>();
-            // Configure the HTTP request pipeline.
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -40,15 +54,12 @@ namespace LoginAppOAuth.Server
             }
 
             app.UseHttpsRedirection();
-
             app.UseAuthorization();
-
-
             app.MapControllers();
-
             app.MapFallbackToFile("/index.html");
 
             app.Run();
+
         }
     }
 }
