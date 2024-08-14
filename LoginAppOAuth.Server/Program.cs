@@ -33,9 +33,8 @@ namespace LoginAppOAuth.Server
             
             builder.Services.AddIdentityApiEndpoints<IdentityUser>()
             .AddEntityFrameworkStores<UserDbContext>();
-            
+           
             builder.Services.AddControllers();
-
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();

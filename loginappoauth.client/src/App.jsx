@@ -52,8 +52,8 @@ export default function App() {
             } else {
                 const errorData = await response.json();
                 notification.error({
-                    message: 'Error',
-                    description: errorData.Message || 'Something went wrong',
+                    message: 'Data is incorrect',
+                    description: errorData.Message,
                 });
             }
         } catch (error) {
