@@ -255,7 +255,7 @@ export default function App() {
                                 value={assignRoleEmail}
                                 onChange={(e) => setAssignRoleEmail(e.target.value)}
                                 placeholder="Enter user email..."
-                            />
+                            /> 
                         </Form.Item>
                         <Form.Item
                             label="Role"
