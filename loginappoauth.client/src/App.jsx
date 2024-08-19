@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { notification, Button, Card, Form, Input, Spin, Modal, Select } from 'antd';
 import './App.css';
 
@@ -9,14 +9,19 @@ export default function App() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
-    const [manualToken, setManualToken] = useState('');
     const [userName, setUserName] = useState('');
     const [isAdmin, setIsAdmin] = useState(false);
-    const [showTokenInput, setShowTokenInput] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [assignRoleEmail, setAssignRoleEmail] = useState('');
     const [role, setRole] = useState('');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            fetchUserName(token);
+        }
+    }, []);
 
     const handleSubmit = async (values) => {
         const endpoint = 'https://localhost:7092/login';
@@ -39,9 +44,13 @@ export default function App() {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Server response data:', data);
+                const accessToken = data.accessToken;
+                console.log('Access Token:', accessToken);
 
-                setManualToken(data.token);
-                setShowTokenInput(true);
+                localStorage.setItem('accessToken', accessToken);
+
+                fetchUserName(accessToken);
+
             } else {
                 const errorData = await response.json();
                 notification.error({
@@ -95,7 +104,7 @@ export default function App() {
                             description: `Roles: ${rolesText}`,
                         });
                     }
-                    setUserName(data.userName);  // Zak³adam, ¿e `userName` jest czêœci¹ odpowiedzi
+                    setUserName(data.userName);
                     setIsLoggedIn(true);
                 } else {
                     notification.error({
@@ -119,7 +128,7 @@ export default function App() {
 
     const handleAssignRole = async () => {
         setLoading(true);
-        const token = manualToken;
+        const token = localStorage.getItem('accessToken');
 
         try {
             const response = await fetch('https://localhost:7092/api/Roles/AssignRole', {
@@ -154,10 +163,9 @@ export default function App() {
     };
 
     const handleLogout = () => {
+        localStorage.removeItem('accessToken');
         setIsLoggedIn(false);
-        setManualToken('');
         setUserName('');
-        setShowTokenInput(false);
         setIsAdmin(false);
         notification.info({
             message: 'Logged Out',
@@ -168,76 +176,52 @@ export default function App() {
     return (
         <div className="auth-container">
             {!isLoggedIn ? (
-                !showTokenInput ? (
-                    <div className={`card-container ${isLogin ? 'login' : 'register'}`}>
-                        <Card
-                            title="Log in"
-                            className="auth-card"
-                        >
-                            {loading ? (
-                                <div className="spinner-container">
-                                    <Spin size="large" />
-                                </div>
-                            ) : (
-                                <Form layout="vertical" onFinish={handleSubmit}>
-                                    <Form.Item
-                                        label="Email"
-                                        name="email"
-                                        rules={[{ required: true, message: 'Please enter your email!' }]}
-                                    >
-                                        <Input
-                                            type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="Enter your email..."
-                                        />
-                                    </Form.Item>
-                                    <Form.Item
-                                        label="Password"
-                                        name="password"
-                                        rules={[{ required: true, message: 'Please enter your password!' }]}
-                                    >
-                                        <Input.Password
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="Enter your password..."
-                                        />
-                                    </Form.Item>
-                                    <Form.Item>
-                                        <Button className="actionButton" type="primary" htmlType="submit" block>
-                                            Log in
-                                        </Button>
-                                    </Form.Item>
-                                </Form>
-                            )}
-                        </Card>
-                    </div>
-                ) : (
-                    <div className="token-input-container">
-                        <Card title="Confirm Token" className="token-input-card">
-                            <Form layout="vertical" onFinish={() => fetchUserName(manualToken)}>
+                <div className={`card-container ${isLogin ? 'login' : 'register'}`}>
+                    <Card
+                        title="Log in"
+                        className="auth-card"
+                    >
+                        {loading ? (
+                            <div className="spinner-container">
+                                <Spin size="large" />
+                            </div>
+                        ) : (
+                            <Form layout="vertical" onFinish={handleSubmit}>
                                 <Form.Item
-                                    label="Token"
-                                    rules={[{ required: true, message: 'Please enter the token!' }]}
+                                    label="Email"
+                                    name="email"
+                                    rules={[{ required: true, message: 'Please enter your email!' }]}
                                 >
                                     <Input
-                                        value={manualToken}
-                                        onChange={(e) => setManualToken(e.target.value)}
-                                        placeholder="Enter token..."
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="Enter your email..."
+                                    />
+                                </Form.Item>
+                                <Form.Item
+                                    label="Password"
+                                    name="password"
+                                    rules={[{ required: true, message: 'Please enter your password!' }]}
+                                >
+                                    <Input.Password
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="Enter your password..."
                                     />
                                 </Form.Item>
                                 <Form.Item>
                                     <Button className="actionButton" type="primary" htmlType="submit" block>
-                                        Confirm Data
+                                        Log in
                                     </Button>
                                 </Form.Item>
                             </Form>
-                        </Card>
-                    </div>
-                )
+                        )}
+                    </Card>
+                </div>
             ) : (
-                    <div className="user-info">
-                        <p> <strong>Hi</strong> <strong>{isAdmin ? 'Admin' : 'Worker'}</strong> {userName}!</p>
+                <div className="user-info">
+                    <p> <strong>Hi</strong> {isAdmin ? 'Admin' : 'Worker'} <strong>{userName}!</strong></p>
                     <Button onClick={handleLogout} type="default" block>
                         Log Out
                     </Button>
