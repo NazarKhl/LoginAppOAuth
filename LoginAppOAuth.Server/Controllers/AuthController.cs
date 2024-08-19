@@ -1,102 +1,113 @@
-using LoginAppOAuth.Server.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
+using LoginAppOAuth.Server.Model;
 
 namespace LoginAppOAuth.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin,Worker")]
     public class RolesController : ControllerBase
     {
-        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ILogger<RolesController> _logger;
 
-        public RolesController(RoleManager<IdentityRole> roleManager, UserManager<IdentityUser> userManager)
+        public RolesController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, ILogger<RolesController> logger)
         {
-            _roleManager = roleManager;
             _userManager = userManager;
+            _roleManager = roleManager;
+            _logger = logger;
         }
 
-        [HttpPost("add-role")]
+        [HttpPost("AssignRole")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddRole([FromBody] RoleModel model)
+        public async Task<IActionResult> AssignRole([FromBody] RoleAssignmentDto model)
         {
-            if (string.IsNullOrWhiteSpace(model.Name))
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Role name is required.");
+                return BadRequest(ModelState);
             }
 
-            var roleExists = await _roleManager.RoleExistsAsync(model.Name);
-            if (roleExists)
-            {
-                return BadRequest("Role already exists.");
-            }
-
-            var role = new IdentityRole(model.Name);
-            var result = await _roleManager.CreateAsync(role);
-
-            if (result.Succeeded)
-            {
-                return Ok(new { Message = "Role created successfully" });
-            }
-
-            return BadRequest(result.Errors);
-        }
-
-        [HttpPost("assign-role")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AssignRole([FromBody] AssignRoleModel model)
-        {
-            if (string.IsNullOrWhiteSpace(model.RoleName) || string.IsNullOrWhiteSpace(model.UserId))
-            {
-                return BadRequest("Role name and User ID are required.");
-            }
-
-            var user = await _userManager.FindByIdAsync(model.UserId);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
-                return NotFound("User not found.");
+                return NotFound(new { Message = "User not found." });
             }
 
-            var roleExists = await _roleManager.RoleExistsAsync(model.RoleName);
-            if (!roleExists)
+            if (!await _roleManager.RoleExistsAsync(model.Role))
             {
-                return BadRequest("Role does not exist.");
+                return BadRequest(new { Message = "Role does not exist." });
             }
 
-            var result = await _userManager.AddToRoleAsync(user, model.RoleName);
+            if (await _userManager.IsInRoleAsync(user, model.Role))
+            {
+                return BadRequest(new { Message = "User already has this role." });
+            }
+
+            var result = await _userManager.AddToRoleAsync(user, model.Role);
             if (result.Succeeded)
             {
-                return Ok(new { Message = "Role assigned successfully" });
+                _logger.LogInformation($"Role '{model.Role}' assigned to user '{model.Email}'.");
+                return Ok(new { Message = "Role assigned successfully." });
             }
 
-            return BadRequest(result.Errors);
+            return BadRequest(new { Message = "Failed to assign role." });
         }
 
-        [HttpGet("role-check")]
+
+        [HttpPost("RemoveRole")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RemoveRole([FromBody] RoleAssignmentDto model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return NotFound(new { Message = "User not found." });
+            }
+
+            if (!await _userManager.IsInRoleAsync(user, model.Role))
+            {
+                return BadRequest(new { Message = "User does not have this role." });
+            }
+
+            var result = await _userManager.RemoveFromRoleAsync(user, model.Role);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation($"Role '{model.Role}' removed from user '{model.Email}'.");
+                return Ok(new { Message = "Role removed successfully." });
+            }
+
+            return BadRequest(new { Message = "Failed to remove role." });
+        }
+
+        [HttpGet("UserInfo")]
         [Authorize]
-        public async Task<IActionResult> CheckUserRole()
+        public async Task<IActionResult> UserInfo()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-            {
-                return Unauthorized();
-            }
-
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return NotFound("User not found.");
+                return NotFound(new { Message = "User not found." });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
-            var role = roles.FirstOrDefault() ?? "None";
 
-            return Ok(new { role });
+            var userInfo = new
+            {
+                UserName = user.UserName,
+                Roles = roles
+            };
+
+            return Ok(userInfo);
         }
     }
 }
