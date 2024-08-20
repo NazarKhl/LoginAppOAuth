@@ -14,6 +14,9 @@ export default function App() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [assignRoleEmail, setAssignRoleEmail] = useState('');
     const [role, setRole] = useState('');
+    const [removeRoleEmail, setRemoveRoleEmail] = useState('');
+    const [removeRole, setRemoveRole] = useState('');
+    const [isRemoveModalVisible, setIsRemoveModalVisible] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
@@ -75,7 +78,7 @@ export default function App() {
         }
 
         try {
-            const response = await fetch('https://localhost:7092/api/roles/UserInfo', {
+            const response = await fetch('https://localhost:7092/api/Roles/UserInfo', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -148,7 +151,43 @@ export default function App() {
             } else {
                 const errorData = await response.json();
                 notification.error({
-                    message: 'Error',
+                    message: 'User role is already exist',
+                    description: errorData.Message,
+                });
+            }
+        } catch (error) {
+            notification.error({
+                message: 'Error',
+                description: 'Unable to connect to the server.',
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRemoveRole = async () => {
+        setLoading(true);
+        const token = localStorage.getItem('accessToken');
+
+        try {
+            const response = await fetch('https://localhost:7092/api/Roles/RemoveRole', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: removeRoleEmail, role: removeRole }),
+            });
+
+            if (response.ok) {
+                notification.success({
+                    message: 'Role removed successfully!',
+                });
+                setIsRemoveModalVisible(false);
+            } else {
+                const errorData = await response.json();
+                notification.error({
+                    message: 'User role is already deleted',
                     description: errorData.Message,
                 });
             }
@@ -221,62 +260,114 @@ export default function App() {
                 </div>
             ) : (
                 <div className="user-info">
-                    <p> <strong>Hi</strong> {isAdmin ? 'Admin' : 'Worker'} <strong>{userName}!</strong></p>
+                    <p> <strong>Hi</strong> {isAdmin ? 'Admin' : 'Worker'} <strong>{userName}</strong></p>
                     <Button onClick={handleLogout} type="default" block>
                         Log Out
                     </Button>
                     {isAdmin && (
-                        <Button
-                            type="primary"
-                            onClick={() => setIsModalVisible(true)}
-                            block
-                            style={{ marginTop: 16 }}
-                        >
-                            Assign Roles
-                        </Button>
+                        <>
+                            <Button
+                                type="primary"
+                                onClick={() => setIsModalVisible(true)}
+                                block
+                                style={{ marginTop: 16 }}
+                            >
+                                Assign Roles
+                            </Button>
+                            <Button
+                                type="primary"
+                                danger
+                                onClick={() => setIsRemoveModalVisible(true)}
+                                block
+                                style={{ marginTop: 16, border: 0 }}
+                            >
+                                Remove Roles
+                            </Button>
+                        </>
                     )}
                 </div>
             )}
 
             {isAdmin && (
-                <Modal
-                    title="Assign Role"
-                    visible={isModalVisible}
-                    onCancel={() => setIsModalVisible(false)}
-                    footer={null}
-                >
-                    <Form layout="vertical" onFinish={handleAssignRole}>
-                        <Form.Item
-                            label="User Email"
-                            rules={[{ required: true, message: 'Please enter the user email!' }]}
-                        >
-                            <Input
-                                type="email"
-                                value={assignRoleEmail}
-                                onChange={(e) => setAssignRoleEmail(e.target.value)}
-                                placeholder="Enter user email..."
-                            /> 
-                        </Form.Item>
-                        <Form.Item
-                            label="Role"
-                            rules={[{ required: true, message: 'Please select a role!' }]}
-                        >
-                            <Select
-                                value={role}
-                                onChange={(value) => setRole(value)}
-                                placeholder="Select a role..."
+                <>
+                    <Modal
+                        title="Assign Role"
+                        visible={isModalVisible}
+                        onCancel={() => setIsModalVisible(false)}
+                        footer={null}
+                    >
+                        <Form layout="vertical" onFinish={handleAssignRole}>
+                            <Form.Item
+                                label="User Email"
+                                rules={[{ required: true, message: 'Please enter the user email!' }]}
                             >
-                                <Option value="Worker">Worker</Option>
-                                <Option value="Admin">Admin</Option>
-                            </Select>
-                        </Form.Item>
-                        <Form.Item>
-                            <Button type="primary" htmlType="submit" block>
-                                Assign Role
-                            </Button>
-                        </Form.Item>
-                    </Form>
-                </Modal>
+                                <Input
+                                    type="email"
+                                    value={assignRoleEmail}
+                                    onChange={(e) => setAssignRoleEmail(e.target.value)}
+                                    placeholder="Enter user email..."
+                                />
+                            </Form.Item>
+                            <Form.Item
+                                label="Role"
+                                rules={[{ required: true, message: 'Please select a role!' }]}
+                            >
+                                <Select
+                                    value={role}
+                                    onChange={(value) => setRole(value)}
+                                    placeholder="Select a role..."
+                                >
+                                    <Option value="Worker">Worker</Option>
+                                    <Option value="Admin">Admin</Option>
+                                </Select>
+                            </Form.Item>
+                            <Form.Item>
+                                <Button type="dashed" htmlType="submit" block>
+                                    Assign Role
+                                </Button>
+                            </Form.Item>
+                        </Form>
+                    </Modal>
+
+                    <Modal
+                        title="Remove Role"
+                        visible={isRemoveModalVisible}
+                        onCancel={() => setIsRemoveModalVisible(false)}
+                        footer={null}
+                    >
+                        <Form layout="vertical" onFinish={handleRemoveRole}>
+                            <Form.Item
+                                label="User Email"
+                                rules={[{ required: true, message: 'Please enter the user email!' }]}
+                            >
+                                <Input
+                                    type="email"
+                                    value={removeRoleEmail}
+                                    onChange={(e) => setRemoveRoleEmail(e.target.value)}
+                                    placeholder="Enter user email..."
+                                />
+                            </Form.Item>
+                            <Form.Item
+                                label="Role"
+                                rules={[{ required: true, message: 'Please select a role!' }]}
+                            >
+                                <Select
+                                    value={removeRole}
+                                    onChange={(value) => setRemoveRole(value)}
+                                    placeholder="Select a role..."
+                                >
+                                    <Option value="Worker">Worker</Option>
+                                    <Option value="Admin">Admin</Option>
+                                </Select>
+                            </Form.Item>
+                            <Form.Item>
+                                <Button type="dashed" danger htmlType="submit" block>
+                                    Remove Role
+                                </Button>
+                            </Form.Item>
+                        </Form>
+                    </Modal>
+                </>
             )}
         </div>
     );
